@@ -40,7 +40,7 @@ export function Sidebar({
         </div>
 
         <Link to="/add">
-          <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700">
+          <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white">
             <Plus className="w-4 h-4 mr-2" />
             添加程序
           </Button>

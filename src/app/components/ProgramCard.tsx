@@ -5,6 +5,7 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { getLucideIcon } from './ui/utils';
+import { confirm } from '@tauri-apps/plugin-dialog';
 import {
   Play,
   FolderOpen,
@@ -80,10 +81,14 @@ export function ProgramCard({
     onToggleFavorite?.(program.id);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (confirm(`确定要删除 "${program.name}" 吗?`)) {
+    const confirmed = await confirm(`确定要删除 "${program.name}" 吗?`, {
+      title: '删除确认',
+      kind: 'warning',
+    });
+    if (confirmed) {
       onDelete?.(program.id);
       toast.success('程序已删除');
     }
@@ -199,7 +204,7 @@ export function ProgramCard({
                 <TooltipTrigger asChild>
                   <Button
                     size="sm"
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
                     onClick={handleRun}
                   >
                     <Play className="w-4 h-4 mr-1" />

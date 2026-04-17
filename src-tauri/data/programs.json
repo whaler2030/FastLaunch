@@ -1,0 +1,16 @@
+[
+  {
+    "id": "1776428878102",
+    "name": "淘宝评论自动提取",
+    "description": "",
+    "icon": "Network",
+    "path": "/Users/whaler/Documents/Projects-Categorized/03-数据分析与可视化/tbdppj/淘宝评论自动提取.py",
+    "category": "data",
+    "tags": [],
+    "createdAt": "2026-04-17",
+    "lastRun": "2026-04-17",
+    "favorite": null,
+    "pythonPath": "",
+    "envVars": null
+  }
+]

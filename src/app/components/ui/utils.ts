@@ -10,8 +10,8 @@ export function cn(...inputs: ClassValue[]) {
 // Type-safe icon getter
 export function getLucideIcon(iconName: string): LucideIcon {
   const icon = LucideIcons[iconName as keyof typeof LucideIcons];
-  // Check if it's a valid icon component (not a helper function)
-  if (typeof icon === "function" && "displayName" in icon) {
+  // Check if it's a valid icon component (function with render capability)
+  if (typeof icon === "function") {
     return icon as LucideIcon;
   }
   return LucideIcons.Code as LucideIcon;

@@ -1,3 +1,4 @@
+import { confirm } from '@tauri-apps/plugin-dialog';
 import { useParams, Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { usePrograms } from '../hooks/usePrograms';
@@ -85,8 +86,12 @@ export function ProgramDetail() {
     toast.info(`打开终端: ${program.path}`);
   };
 
-  const handleDelete = () => {
-    if (confirm(`确定要删除 "${program?.name}" 吗?`)) {
+  const handleDelete = async () => {
+    const confirmed = await confirm(`确定要删除 "${program?.name}" 吗?`, {
+      title: '删除确认',
+      kind: 'warning',
+    });
+    if (confirmed) {
       deleteProgram(id!);
       navigate('/');
     }
@@ -155,7 +160,7 @@ export function ProgramDetail() {
               <div className="flex gap-3">
                 <Button
                   size="lg"
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
                   onClick={handleRun}
                 >
                   <Play className="w-5 h-5 mr-2" />
@@ -237,7 +242,7 @@ export function ProgramDetail() {
 
           {/* Sidebar Column */}
           <div className="space-y-6">
-            {/* Info Card */}
+            {/* Info Card - removed Stats Card as it has no real data */}
             <Card className="p-6">
               <h3 className="font-semibold text-lg mb-4">基本信息</h3>
               <div className="space-y-4">
@@ -293,31 +298,6 @@ export function ProgramDetail() {
                     </div>
                   </>
                 )}
-              </div>
-            </Card>
-
-            {/* Stats Card */}
-            <Card className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-blue-200 dark:border-blue-800">
-              <h3 className="font-semibold text-lg mb-4">使用统计</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                    运行次数
-                  </span>
-                  <span className="font-semibold">24</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                    成功率
-                  </span>
-                  <span className="font-semibold text-green-600">95.8%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                    平均耗时
-                  </span>
-                  <span className="font-semibold">2.3s</span>
-                </div>
               </div>
             </Card>
           </div>
