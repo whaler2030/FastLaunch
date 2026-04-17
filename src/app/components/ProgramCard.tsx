@@ -7,7 +7,7 @@ import { Button } from './ui/button';
 import { getLucideIcon } from './ui/utils';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { runProgram, listenRunOutput } from '../../api/executor';
-import { open as shellOpen } from '@tauri-apps/plugin-shell';
+import { Command } from '@tauri-apps/plugin-shell';
 import {
   Play,
   FolderOpen,
@@ -89,9 +89,23 @@ export function ProgramCard({
     e.stopPropagation();
 
     try {
-      // macOS: 打开脚本所在目录（会用 Finder 打开）
+      // macOS: 在 Terminal.app 中运行脚本
+      await Command.create('run-in-terminal', [program.path]).execute();
+      toast.success(`已在终端打开脚本`);
+    } catch (error) {
+      console.error('Open terminal error:', error);
+      toast.error(`打开终端失败: ${error}`);
+    }
+  };
+
+  const handleOpenDir = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      // macOS: 打开脚本所在目录（用 Finder）
       const scriptDir = program.path.substring(0, program.path.lastIndexOf('/'));
-      await shellOpen(scriptDir);
+      await Command.create('open-dir', [scriptDir]).execute();
       toast.success(`已打开脚本目录`);
     } catch (error) {
       console.error('Open directory error:', error);
@@ -245,13 +259,13 @@ export function ProgramCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={handleShowPath}
+                    onClick={handleOpenDir}
                   >
                     <FolderOpen className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>复制文件路径</p>
+                  <p>打开脚本目录</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -266,7 +280,7 @@ export function ProgramCard({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>在终端中打开</p>
+                  <p>在终端运行</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

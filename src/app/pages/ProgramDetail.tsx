@@ -1,5 +1,5 @@
 import { confirm } from '@tauri-apps/plugin-dialog';
-import { open as shellOpen } from '@tauri-apps/plugin-shell';
+import { Command } from '@tauri-apps/plugin-shell';
 import { useParams, Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { usePrograms } from '../hooks/usePrograms';
@@ -85,9 +85,20 @@ export function ProgramDetail() {
 
   const handleOpenTerminal = async () => {
     try {
-      // 打开脚本所在目录（会用 Finder 打开）
+      // macOS: 在 Terminal.app 中运行脚本
+      await Command.create('run-in-terminal', [program.path]).execute();
+      toast.success(`已在终端打开脚本`);
+    } catch (error) {
+      console.error('Open terminal error:', error);
+      toast.error(`打开终端失败: ${error}`);
+    }
+  };
+
+  const handleOpenDir = async () => {
+    try {
+      // macOS: 打开脚本所在目录（用 Finder）
       const scriptDir = program.path.substring(0, program.path.lastIndexOf('/'));
-      await shellOpen(scriptDir);
+      await Command.create('open-dir', [scriptDir]).execute();
       toast.success(`已打开脚本目录`);
     } catch (error) {
       console.error('Open directory error:', error);
@@ -166,10 +177,10 @@ export function ProgramDetail() {
             {/* Actions Card */}
             <Card className="p-6">
               <h3 className="font-semibold text-lg mb-4">快速操作</h3>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <Button
                   size="lg"
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
                   onClick={handleRun}
                 >
                   <Play className="w-5 h-5 mr-2" />
@@ -177,21 +188,27 @@ export function ProgramDetail() {
                 </Button>
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={handleShowPath}
+                  className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white"
+                  onClick={handleOpenTerminal}
                 >
-                  <FolderOpen className="w-5 h-5 mr-2" />
-                  查看路径
+                  <Terminal className="w-5 h-5 mr-2" />
+                  终端运行
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
-                  className="flex-1"
-                  onClick={handleOpenTerminal}
+                  onClick={handleOpenDir}
                 >
-                  <Terminal className="w-5 h-5 mr-2" />
+                  <FolderOpen className="w-5 h-5 mr-2" />
                   打开目录
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={handleShowPath}
+                >
+                  <Folder className="w-5 h-5 mr-2" />
+                  复制路径
                 </Button>
               </div>
             </Card>
