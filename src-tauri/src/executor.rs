@@ -87,11 +87,25 @@ pub async fn run_program(
 pub fn get_python_versions() -> Vec<String> {
     let mut versions = Vec::new();
 
-    // Common Python paths to check
+    // Common Python paths to check (including conda/miniconda)
     let common_paths = vec![
         "/usr/bin/python3",
         "/usr/local/bin/python3",
         "/opt/homebrew/bin/python3",
+        "/opt/homebrew/opt/python@3/bin/python3",
+        // Conda/Miniconda paths
+        "/opt/miniconda3/bin/python3",
+        "/opt/miniconda/bin/python3",
+        "/opt/anaconda3/bin/python3",
+        "/opt/anaconda/bin/python3",
+        // User-specific conda paths (expanded later)
+        "~/opt/miniconda3/bin/python3",
+        "~/opt/miniconda/bin/python3",
+        "~/miniconda3/bin/python3",
+        "~/miniconda/bin/python3",
+        "~/anaconda3/bin/python3",
+        "~/anaconda/bin/python3",
+        // pyenv
         "~/.pyenv/shims/python",
         "~/.pyenv/shims/python3",
     ];
@@ -104,7 +118,28 @@ pub fn get_python_versions() -> Vec<String> {
         };
 
         if Path::new(&expanded).exists() {
-            versions.push(expanded);
+            // Avoid duplicates
+            if !versions.contains(&expanded) {
+                versions.push(expanded);
+            }
+        }
+    }
+
+    // If no Python found, try to find via PATH environment
+    if versions.is_empty() {
+        // Try common names
+        for name in &["python3", "python"] {
+            if let Ok(output) = std::process::Command::new("which")
+                .arg(name)
+                .output()
+            {
+                if output.status.success() {
+                    let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                    if !path.is_empty() && Path::new(&path).exists() && !versions.contains(&path) {
+                        versions.push(path);
+                    }
+                }
+            }
         }
     }
 

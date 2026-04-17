@@ -1,5 +1,5 @@
 import { confirm } from '@tauri-apps/plugin-dialog';
-import { Command } from '@tauri-apps/plugin-shell';
+import { open as shellOpen } from '@tauri-apps/plugin-shell';
 import { useParams, Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { usePrograms } from '../hooks/usePrograms';
@@ -85,13 +85,13 @@ export function ProgramDetail() {
 
   const handleOpenTerminal = async () => {
     try {
-      // macOS: 打开 Terminal.app 并执行 cd 到脚本目录
+      // 打开脚本所在目录（会用 Finder 打开）
       const scriptDir = program.path.substring(0, program.path.lastIndexOf('/'));
-      await Command.create('open', ['-a', 'Terminal', scriptDir]).execute();
-      toast.success(`已打开终端`);
+      await shellOpen(scriptDir);
+      toast.success(`已打开脚本目录`);
     } catch (error) {
-      console.error('Open terminal error:', error);
-      toast.error(`打开终端失败: ${error}`);
+      console.error('Open directory error:', error);
+      toast.error(`打开目录失败: ${error}`);
     }
   };
 
@@ -191,7 +191,7 @@ export function ProgramDetail() {
                   onClick={handleOpenTerminal}
                 >
                   <Terminal className="w-5 h-5 mr-2" />
-                  打开终端
+                  打开目录
                 </Button>
               </div>
             </Card>
