@@ -356,7 +356,7 @@ export function ProgramForm() {
                     }}
                     placeholder="输入标签后按回车"
                   />
-                  <Button type="button" onClick={handleAddTag}>
+                  <Button type="button" onClick={handleAddTag} variant="secondary">
                     添加
                   </Button>
                 </div>

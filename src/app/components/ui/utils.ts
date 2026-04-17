@@ -1,18 +1,19 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import * as LucideIcons from "lucide-react";
+import * as icons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { Code } from "lucide-react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Type-safe icon getter
+// Type-safe icon getter - use direct import approach
 export function getLucideIcon(iconName: string): LucideIcon {
-  const icon = LucideIcons[iconName as keyof typeof LucideIcons];
-  // Check if it's a valid icon component (function with render capability)
-  if (typeof icon === "function") {
+  const icon = (icons as Record<string, unknown>)[iconName];
+  // Check if it's a valid icon component
+  if (typeof icon === "function" || typeof icon === "object") {
     return icon as LucideIcon;
   }
-  return LucideIcons.Code as LucideIcon;
+  return Code;
 }

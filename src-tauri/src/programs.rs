@@ -24,11 +24,11 @@ pub struct Program {
 }
 
 fn get_data_file_path(_app: &tauri::AppHandle) -> PathBuf {
-    // 开发环境使用项目目录，生产环境使用 Application Support
+    // 开发环境使用项目目录外的位置，避免触发 tauri dev 重建
     if cfg!(debug_assertions) {
-        std::env::current_dir()
-            .unwrap()
-            .join("data")
+        // 使用临时目录或用户目录，不在 src-tauri 内
+        std::env::temp_dir()
+            .join("fastlaunch")
             .join("programs.json")
     } else {
         dirs::data_local_dir()

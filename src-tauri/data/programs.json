@@ -1,9 +1,9 @@
 [
   {
-    "id": "1776428878102",
+    "id": "1776429966655",
     "name": "淘宝评论自动提取",
     "description": "",
-    "icon": "Network",
+    "icon": "Code",
     "path": "/Users/whaler/Documents/Projects-Categorized/03-数据分析与可视化/tbdppj/淘宝评论自动提取.py",
     "category": "data",
     "tags": [],
