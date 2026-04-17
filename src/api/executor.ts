@@ -16,6 +16,14 @@ export async function getPythonVersions(): Promise<string[]> {
   return invoke<string[]>('get_python_versions');
 }
 
+export async function openDirectory(path: string): Promise<void> {
+  return invoke('open_directory', { path });
+}
+
+export async function runInTerminal(scriptPath: string): Promise<void> {
+  return invoke('run_in_terminal', { scriptPath });
+}
+
 export function listenRunStart(callback: (name: string) => void) {
   return listen<string>('run-start', (event) => callback(event.payload));
 }

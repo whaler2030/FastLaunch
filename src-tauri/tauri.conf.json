@@ -34,22 +34,5 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
-  },
-  "plugins": {
-    "shell": {
-      "open": true,
-      "scope": [
-        {
-          "name": "open-dir",
-          "cmd": "/usr/bin/open",
-          "args": [{ "validator": ".+" }]
-        },
-        {
-          "name": "run-in-terminal",
-          "cmd": "/usr/bin/open",
-          "args": ["-a", "Terminal", { "validator": ".+" }]
-        }
-      ]
-    }
   }
 }

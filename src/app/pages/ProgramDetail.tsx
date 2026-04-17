@@ -1,9 +1,8 @@
 import { confirm } from '@tauri-apps/plugin-dialog';
-import { Command } from '@tauri-apps/plugin-shell';
 import { useParams, Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { usePrograms } from '../hooks/usePrograms';
-import { runProgram, listenRunOutput } from '../../api/executor';
+import { runProgram, listenRunOutput, openDirectory, runInTerminal } from '../../api/executor';
 import { getLucideIcon } from '../components/ui/utils';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -85,8 +84,7 @@ export function ProgramDetail() {
 
   const handleOpenTerminal = async () => {
     try {
-      // macOS: 在 Terminal.app 中运行脚本
-      await Command.create('run-in-terminal', [program.path]).execute();
+      await runInTerminal(program.path);
       toast.success(`已在终端打开脚本`);
     } catch (error) {
       console.error('Open terminal error:', error);
@@ -96,9 +94,7 @@ export function ProgramDetail() {
 
   const handleOpenDir = async () => {
     try {
-      // macOS: 打开脚本所在目录（用 Finder）
-      const scriptDir = program.path.substring(0, program.path.lastIndexOf('/'));
-      await Command.create('open-dir', [scriptDir]).execute();
+      await openDirectory(program.path);
       toast.success(`已打开脚本目录`);
     } catch (error) {
       console.error('Open directory error:', error);

@@ -29,6 +29,8 @@ pub fn run() {
             update_program,
             run_program,
             get_python_versions,
+            open_directory,
+            run_in_terminal,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

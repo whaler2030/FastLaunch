@@ -145,3 +145,58 @@ pub fn get_python_versions() -> Vec<String> {
 
     versions
 }
+
+/// macOS: 打开目录（用 Finder）
+#[tauri::command]
+pub fn open_directory(path: String) -> Result<(), String> {
+    let dir_path = if Path::new(&path).is_file() {
+        // 如果是文件，获取其父目录
+        path.rsplit_once('/')
+            .map(|(dir, _)| dir)
+            .unwrap_or(&path)
+            .to_string()
+    } else {
+        path
+    };
+
+    let output = Command::new("/usr/bin/open")
+        .arg(&dir_path)
+        .output();
+
+    match output {
+        Ok(result) => {
+            if result.status.success() {
+                Ok(())
+            } else {
+                Err(String::from_utf8_lossy(&result.stderr).to_string())
+            }
+        }
+        Err(e) => Err(format!("打开目录失败: {}", e)),
+    }
+}
+
+/// macOS: 在 Terminal.app 中运行脚本
+#[tauri::command]
+pub fn run_in_terminal(script_path: String) -> Result<(), String> {
+    // 使用 AppleScript 让 Terminal 实际执行脚本
+    let script = format!(
+        "tell application \"Terminal\" to do script \"python3 '{}'\"",
+        script_path
+    );
+
+    let output = Command::new("/usr/bin/osascript")
+        .arg("-e")
+        .arg(&script)
+        .output();
+
+    match output {
+        Ok(result) => {
+            if result.status.success() {
+                Ok(())
+            } else {
+                Err(String::from_utf8_lossy(&result.stderr).to_string())
+            }
+        }
+        Err(e) => Err(format!("打开终端失败: {}", e)),
+    }
+}
