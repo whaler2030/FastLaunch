@@ -1,6 +1,6 @@
 # FastLaunch
 
-一款简洁优雅的 Python 程序管理器，让你轻松管理和执行 Python 脚本。
+Vibe Coding时代，你是否电脑上也躺着很多一时兴起用AI编写的各种Python程序，时间一久就吃灰了，如果是，那么你可能需要这样一款简洁优雅的 Python 程序管理器，让你轻松管理和执行 Python 脚本。
 
 ![FastLaunch](https://img.shields.io/badge/version-1.0.0-blue)
 ![Tauri](https://img.shields.io/badge/Tauri-2.x-green)
