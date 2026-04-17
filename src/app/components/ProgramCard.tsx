@@ -6,6 +6,8 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { getLucideIcon } from './ui/utils';
 import { confirm } from '@tauri-apps/plugin-dialog';
+import { runProgram, listenRunOutput } from '../../api/executor';
+import { Command } from '@tauri-apps/plugin-shell';
 import {
   Play,
   FolderOpen,
@@ -48,11 +50,24 @@ export function ProgramCard({
   // 动态获取图标组件
   const IconComponent = getLucideIcon(program.icon);
 
-  const handleRun = (e: React.MouseEvent) => {
+  const handleRun = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toast.success(`正在运行 "${program.name}"...`);
-    onRun?.(program);
+    toast.info(`正在运行 "${program.name}"...`);
+
+    try {
+      const result = await runProgram(program.id);
+      if (result.success) {
+        toast.success(`运行成功，耗时 ${result.duration_ms}ms`);
+        // 更新 lastRun 时间
+        onRun?.(program);
+      } else {
+        toast.error(`运行失败: ${result.error || '未知错误'}`);
+      }
+    } catch (error) {
+      console.error('Run error:', error);
+      toast.error(`运行失败: ${error}`);
+    }
   };
 
   const handleShowPath = (e: React.MouseEvent) => {
@@ -69,10 +84,19 @@ export function ProgramCard({
     }
   };
 
-  const handleOpenTerminal = (e: React.MouseEvent) => {
+  const handleOpenTerminal = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toast.info(`打开终端: ${program.path}`);
+
+    try {
+      // macOS: 打开 Terminal.app 并执行 cd 到脚本目录
+      const scriptDir = program.path.substring(0, program.path.lastIndexOf('/'));
+      await Command.create('open', ['-a', 'Terminal', scriptDir]).execute();
+      toast.success(`已打开终端`);
+    } catch (error) {
+      console.error('Open terminal error:', error);
+      toast.error(`打开终端失败: ${error}`);
+    }
   };
 
   const handleToggleFavorite = (e: React.MouseEvent) => {

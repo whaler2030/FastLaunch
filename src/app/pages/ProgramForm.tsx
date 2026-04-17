@@ -51,20 +51,37 @@ export function ProgramForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
-  const { programs, addProgram, updateProgram } = usePrograms();
-
-  const existingProgram = isEdit ? programs.find((p) => p.id === id) : null;
+  const { programs, loading, addProgram, updateProgram } = usePrograms();
 
   const [formData, setFormData] = useState({
-    name: existingProgram?.name || '',
-    description: existingProgram?.description || '',
-    icon: existingProgram?.icon || 'Code',
-    path: existingProgram?.path || '',
-    category: existingProgram?.category || 'data',
-    tags: existingProgram?.tags || [],
-    pythonPath: existingProgram?.pythonPath || '',
-    createdAt: existingProgram?.createdAt || '',
+    name: '',
+    description: '',
+    icon: 'Code',
+    path: '',
+    category: 'data',
+    tags: [] as string[],
+    pythonPath: '',
+    createdAt: '',
   });
+
+  // 当 programs 加载完成后，更新 formData（编辑模式）
+  useEffect(() => {
+    if (isEdit && !loading && programs.length > 0) {
+      const existingProgram = programs.find((p) => p.id === id);
+      if (existingProgram) {
+        setFormData({
+          name: existingProgram.name,
+          description: existingProgram.description || '',
+          icon: existingProgram.icon || 'Code',
+          path: existingProgram.path,
+          category: existingProgram.category || 'data',
+          tags: existingProgram.tags || [],
+          pythonPath: existingProgram.pythonPath || '',
+          createdAt: existingProgram.createdAt,
+        });
+      }
+    }
+  }, [isEdit, loading, programs, id]);
 
   const [tagInput, setTagInput] = useState('');
   const [pythonVersions, setPythonVersions] = useState<string[]>([]);
@@ -175,6 +192,32 @@ export function ProgramForm() {
   };
 
   const SelectedIcon = getLucideIcon(formData.icon);
+
+  // 编辑模式下等待数据加载
+  if (isEdit && loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
+          <p className="text-zinc-500">加载程序信息...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 编辑模式下找不到程序
+  if (isEdit && !loading && !programs.find((p) => p.id === id)) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">程序未找到</p>
+          <Link to="/">
+            <Button>返回首页</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">

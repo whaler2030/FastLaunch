@@ -1,4 +1,5 @@
 import { confirm } from '@tauri-apps/plugin-dialog';
+import { Command } from '@tauri-apps/plugin-shell';
 import { useParams, Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { usePrograms } from '../hooks/usePrograms';
@@ -82,8 +83,16 @@ export function ProgramDetail() {
     }
   };
 
-  const handleOpenTerminal = () => {
-    toast.info(`打开终端: ${program.path}`);
+  const handleOpenTerminal = async () => {
+    try {
+      // macOS: 打开 Terminal.app 并执行 cd 到脚本目录
+      const scriptDir = program.path.substring(0, program.path.lastIndexOf('/'));
+      await Command.create('open', ['-a', 'Terminal', scriptDir]).execute();
+      toast.success(`已打开终端`);
+    } catch (error) {
+      console.error('Open terminal error:', error);
+      toast.error(`打开终端失败: ${error}`);
+    }
   };
 
   const handleDelete = async () => {
