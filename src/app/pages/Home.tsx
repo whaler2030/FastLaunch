@@ -4,7 +4,10 @@ import { SearchBar } from '../components/SearchBar';
 import { TagFilter } from '../components/TagFilter';
 import { ProgramCard } from '../components/ProgramCard';
 import { usePrograms } from '../hooks/usePrograms';
+import { useCategories } from '../hooks/useCategories';
 import { Program } from '../types/program';
+import { Category as DisplayCategory } from '../types/program';
+import { Category } from '../../api/categories';
 import { SlidersHorizontal, LayoutGrid, List } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import {
@@ -18,6 +21,7 @@ import {
 
 export function Home() {
   const { programs, loading, error, deleteProgram, updateProgram, toggleFavorite } = usePrograms();
+  const { categories: managedCategories, addCategory, updateCategory, deleteCategory } = useCategories();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -25,21 +29,29 @@ export function Home() {
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'lastRun'>('date');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Compute categories dynamically from programs
+  // Compute categories dynamically from programs and managed categories
   const categories = useMemo(() => {
     const counts: Record<string, number> = {};
     programs.forEach((p) => {
       counts[p.category] = (counts[p.category] || 0) + 1;
     });
 
-    return [
+    const displayCategories: DisplayCategory[] = [
       { id: 'all', name: '全部程序', icon: 'Grid3x3', count: programs.length },
-      { id: 'data', name: '数据处理', icon: 'Database', count: counts['data'] || 0 },
-      { id: 'automation', name: '自动化工具', icon: 'Zap', count: counts['automation'] || 0 },
-      { id: 'web', name: 'Web 开发', icon: 'Globe', count: counts['web'] || 0 },
-      { id: 'ml', name: '机器学习', icon: 'Brain', count: counts['ml'] || 0 },
     ];
-  }, [programs]);
+
+    // Add managed categories with their counts
+    managedCategories.forEach((cat) => {
+      displayCategories.push({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        count: counts[cat.id] || 0,
+      });
+    });
+
+    return displayCategories;
+  }, [programs, managedCategories]);
 
   // Compute all tags dynamically from programs
   const allTags = useMemo(() => {
@@ -150,6 +162,10 @@ export function Home() {
         onSelectCategory={setSelectedCategory}
         showFavorites={showFavorites}
         onToggleFavorites={() => setShowFavorites((prev) => !prev)}
+        managedCategories={managedCategories}
+        onAddCategory={addCategory}
+        onUpdateCategory={updateCategory}
+        onDeleteCategory={deleteCategory}
       />
 
       {/* Main Content */}

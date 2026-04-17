@@ -1,8 +1,12 @@
 mod programs;
 mod executor;
+mod categories;
+mod icons;
 
 use programs::*;
 use executor::*;
+use categories::*;
+use icons::*;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -31,6 +35,14 @@ pub fn run() {
             get_python_versions,
             open_directory,
             run_in_terminal,
+            load_categories,
+            save_categories,
+            add_category,
+            update_category,
+            delete_category,
+            save_custom_icon,
+            delete_custom_icon,
+            get_icon_base64,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

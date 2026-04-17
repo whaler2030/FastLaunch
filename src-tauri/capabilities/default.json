@@ -15,6 +15,16 @@
     "fs:allow-write-text-file",
     "fs:allow-exists",
     "fs:allow-mkdir",
+    "fs:allow-copy-file",
+    "fs:allow-remove",
+    "fs:allow-read-dir",
+    "fs:allow-read-file",
+    {
+      "identifier": "fs:allow-applocaldata-read-recursive"
+    },
+    {
+      "identifier": "fs:allow-temp-read-recursive"
+    },
     "dialog:default",
     "dialog:allow-open",
     "dialog:allow-save",

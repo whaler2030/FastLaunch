@@ -3,7 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router';
 import { useState } from 'react';
 import { usePrograms } from '../hooks/usePrograms';
 import { runProgram, listenRunOutput, openDirectory, runInTerminal } from '../../api/executor';
-import { getLucideIcon } from '../components/ui/utils';
+import { getLucideIcon, isCustomIcon } from '../components/ui/utils';
+import { useCustomIcon } from '../hooks/useCustomIcon';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Card } from '../components/ui/card';
@@ -31,6 +32,12 @@ export function ProgramDetail() {
   const [isRunning, setIsRunning] = useState(false);
   const program = programs.find((p) => p.id === id);
 
+  // Hooks must be called before any conditional returns
+  const { base64: iconBase64, isCustom } = useCustomIcon(
+    program?.icon || '',
+    program?.iconType
+  );
+
   if (!program) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -44,7 +51,7 @@ export function ProgramDetail() {
     );
   }
 
-  const IconComponent = getLucideIcon(program.icon);
+  const IconComponent = getLucideIcon(program.iconType === 'custom' ? 'Code' : program.icon);
 
   const handleRun = async () => {
     if (!program || isRunning) return;
@@ -127,8 +134,16 @@ export function ProgramDetail() {
 
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-xl">
-                <IconComponent className="w-10 h-10" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-xl overflow-hidden">
+                {isCustom && iconBase64 ? (
+                  <img
+                    src={iconBase64}
+                    alt={program.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <IconComponent className="w-10 h-10" />
+                )}
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">

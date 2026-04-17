@@ -5,6 +5,7 @@ import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { getLucideIcon } from './ui/utils';
+import { useCustomIcon } from '../hooks/useCustomIcon';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { runProgram, openDirectory, runInTerminal } from '../../api/executor';
 import {
@@ -23,12 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from './ui/tooltip';
 import { toast } from 'sonner';
 
 interface ProgramCardProps {
@@ -46,8 +41,9 @@ export function ProgramCard({
 }: ProgramCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  // 动态获取图标组件
-  const IconComponent = getLucideIcon(program.icon);
+  // 获取图标信息
+  const IconComponent = getLucideIcon(program.iconType === 'custom' ? 'Code' : program.icon);
+  const { loading: iconLoading, base64: iconBase64, isCustom } = useCustomIcon(program.icon, program.iconType);
 
   const handleRun = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -147,8 +143,16 @@ export function ProgramCard({
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-                <IconComponent className="w-6 h-6" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg overflow-hidden">
+                {isCustom && iconBase64 ? (
+                  <img
+                    src={iconBase64}
+                    alt={program.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <IconComponent className="w-6 h-6" />
+                )}
               </div>
               <div>
                 <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
@@ -233,53 +237,33 @@ export function ProgramCard({
                 : 'opacity-0 translate-y-2'
             }`}
           >
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
-                    onClick={handleRun}
-                  >
-                    <Play className="w-4 h-4 mr-1" />
-                    运行
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>执行 Python 程序</p>
-                </TooltipContent>
-              </Tooltip>
+            <Button
+              size="sm"
+              title="执行 Python 程序"
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+              onClick={handleRun}
+            >
+              <Play className="w-4 h-4 mr-1" />
+              运行
+            </Button>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleOpenDir}
-                  >
-                    <FolderOpen className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>打开脚本目录</p>
-                </TooltipContent>
-              </Tooltip>
+            <Button
+              size="sm"
+              variant="outline"
+              title="打开脚本目录"
+              onClick={handleOpenDir}
+            >
+              <FolderOpen className="w-4 h-4" />
+            </Button>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleOpenTerminal}
-                  >
-                    <Terminal className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>在终端运行</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              size="sm"
+              variant="outline"
+              title="在终端运行"
+              onClick={handleOpenTerminal}
+            >
+              <Terminal className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 

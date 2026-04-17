@@ -1,17 +1,23 @@
-import { Category } from '../types/program';
+import { Category as CategoryType } from '../types/program';
+import { Category } from '../../api/categories';
 import { ScrollArea } from './ui/scroll-area';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
-import { Plus, Star, Rocket, Folder } from 'lucide-react';
+import { Plus, Star, Rocket } from 'lucide-react';
 import { Link } from 'react-router';
 import { getLucideIcon } from './ui/utils';
+import { CategoryManager } from './CategoryManager';
 
 interface SidebarProps {
-  categories: Category[];
+  categories: CategoryType[];
   selectedCategory: string;
   onSelectCategory: (categoryId: string) => void;
   showFavorites: boolean;
   onToggleFavorites: () => void;
+  managedCategories?: Category[];
+  onAddCategory?: (category: Category) => Promise<void>;
+  onUpdateCategory?: (category: Category) => Promise<void>;
+  onDeleteCategory?: (id: string) => Promise<void>;
 }
 
 export function Sidebar({
@@ -20,6 +26,10 @@ export function Sidebar({
   onSelectCategory,
   showFavorites,
   onToggleFavorites,
+  managedCategories,
+  onAddCategory,
+  onUpdateCategory,
+  onDeleteCategory,
 }: SidebarProps) {
   return (
     <div className="w-64 h-screen bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
@@ -96,7 +106,15 @@ export function Sidebar({
       </ScrollArea>
 
       {/* Footer */}
-      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
+      <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+        {managedCategories && onAddCategory && onUpdateCategory && onDeleteCategory && (
+          <CategoryManager
+            categories={managedCategories}
+            onAdd={onAddCategory}
+            onUpdate={onUpdateCategory}
+            onDelete={onDeleteCategory}
+          />
+        )}
         <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
           <span>v1.0.0</span>
           <span>© 2026 FastLaunch</span>

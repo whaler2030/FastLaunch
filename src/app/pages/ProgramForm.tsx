@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router';
 import { open } from '@tauri-apps/plugin-dialog';
 import { usePrograms } from '../hooks/usePrograms';
+import { useCategories } from '../hooks/useCategories';
 import { getPythonVersions } from '../../api/executor';
-import { getLucideIcon } from '../components/ui/utils';
+import { saveCustomIcon, getIconBase64 } from '../../api/icons';
+import { getLucideIcon, isCustomIcon } from '../components/ui/utils';
+import { useCustomIcon } from '../hooks/useCustomIcon';
 import { Program } from '../types/program';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -18,15 +21,8 @@ import {
 } from '../components/ui/select';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { ArrowLeft, Save, X, FolderOpen, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, X, FolderOpen, Loader2, Image } from 'lucide-react';
 import { toast } from 'sonner';
-
-const categoryOptions = [
-  { value: 'data', label: '数据处理' },
-  { value: 'automation', label: '自动化工具' },
-  { value: 'web', label: 'Web 开发' },
-  { value: 'ml', label: '机器学习' },
-];
 
 const iconOptions = [
   'FileSpreadsheet',
@@ -52,11 +48,14 @@ export function ProgramForm() {
   const navigate = useNavigate();
   const isEdit = !!id;
   const { programs, loading, addProgram, updateProgram } = usePrograms();
+  const { categories } = useCategories();
 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     icon: 'Code',
+    iconType: 'lucide' as 'lucide' | 'custom',
+    customIconBase64: '',
     path: '',
     category: 'data',
     tags: [] as string[],
@@ -69,16 +68,26 @@ export function ProgramForm() {
     if (isEdit && !loading && programs.length > 0) {
       const existingProgram = programs.find((p) => p.id === id);
       if (existingProgram) {
+        const iconType = existingProgram.iconType || (isCustomIcon(existingProgram.icon) ? 'custom' : 'lucide');
         setFormData({
           name: existingProgram.name,
           description: existingProgram.description || '',
-          icon: existingProgram.icon || 'Code',
+          icon: iconType === 'custom' ? 'Code' : (existingProgram.icon || 'Code'),
+          iconType,
+          customIconBase64: '', // 异步加载
           path: existingProgram.path,
           category: existingProgram.category || 'data',
           tags: existingProgram.tags || [],
           pythonPath: existingProgram.pythonPath || '',
           createdAt: existingProgram.createdAt,
         });
+
+        // 异步加载自定义图标 base64
+        if (iconType === 'custom' && existingProgram.icon) {
+          getIconBase64(existingProgram.icon)
+            .then((base64) => setFormData(prev => ({ ...prev, customIconBase64: base64 })))
+            .catch(() => {});
+        }
       }
     }
   }, [isEdit, loading, programs, id]);
@@ -116,11 +125,13 @@ export function ProgramForm() {
     setSubmitting(true);
 
     try {
+      const programId = isEdit ? id! : Date.now().toString();
       const program: Program = {
-        id: isEdit ? id! : Date.now().toString(),
+        id: programId,
         name: formData.name,
         description: formData.description,
         icon: formData.icon,
+        iconType: formData.iconType,
         path: formData.path,
         category: formData.category,
         tags: formData.tags,
@@ -191,7 +202,44 @@ export function ProgramForm() {
     }
   };
 
-  const SelectedIcon = getLucideIcon(formData.icon);
+  const handleSelectCustomIcon = async () => {
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: '图片', extensions: ['png', 'jpg', 'jpeg', 'svg', 'webp'] }],
+      });
+
+      if (selected && typeof selected === 'string') {
+        const programId = isEdit ? id! : `temp_${Date.now()}`;
+        const iconRef = await saveCustomIcon(programId, selected);
+
+        // 获取 base64 用于预览
+        const base64 = await getIconBase64(iconRef);
+
+        setFormData((prev) => ({
+          ...prev,
+          icon: iconRef,
+          iconType: 'custom',
+          customIconBase64: base64,
+        }));
+        toast.success('图标已选择');
+      }
+    } catch (error) {
+      console.error('Custom icon selection failed:', error);
+      toast.error('选择图标失败');
+    }
+  };
+
+  const handleRemoveCustomIcon = () => {
+    setFormData((prev) => ({
+      ...prev,
+      icon: 'Code',
+      iconType: 'lucide',
+      customIconBase64: '',
+    }));
+  };
+
+  const SelectedIcon = getLucideIcon(formData.iconType === 'lucide' ? formData.icon : 'Code');
 
   // 编辑模式下等待数据加载
   if (isEdit && loading) {
@@ -248,25 +296,74 @@ export function ProgramForm() {
               {/* Icon Selection */}
               <div>
                 <Label htmlFor="icon">程序图标 *</Label>
-                <div className="mt-2 grid grid-cols-8 gap-3">
-                  {iconOptions.map((iconName) => {
-                    const IconComponent = getLucideIcon(iconName);
-                    return (
-                      <button
-                        key={iconName}
-                        type="button"
-                        className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all ${
-                          formData.icon === iconName
-                            ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg scale-110'
-                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
-                        }`}
-                        onClick={() => setFormData({ ...formData, icon: iconName })}
-                      >
-                        <IconComponent className="w-5 h-5" />
-                      </button>
-                    );
-                  })}
+
+                {/* Type toggle */}
+                <div className="mt-2 flex gap-2 mb-4">
+                  <Button
+                    type="button"
+                    variant={formData.iconType === 'lucide' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setFormData((prev) => ({ ...prev, iconType: 'lucide', icon: prev.iconType === 'custom' ? 'Code' : prev.icon }))}
+                  >
+                    预设图标
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={formData.iconType === 'custom' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setFormData((prev) => ({ ...prev, iconType: 'custom' }))}
+                  >
+                    <Image className="w-4 h-4 mr-1" />
+                    自定义图片
+                  </Button>
                 </div>
+
+                {formData.iconType === 'lucide' ? (
+                  <div className="grid grid-cols-8 gap-3">
+                    {iconOptions.map((iconName) => {
+                      const IconComponent = getLucideIcon(iconName);
+                      return (
+                        <button
+                          key={iconName}
+                          type="button"
+                          className={`w-12 h-12 rounded-lg flex items-center justify-center transition-all ${
+                            formData.icon === iconName
+                              ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg scale-110'
+                              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                          }`}
+                          onClick={() => setFormData({ ...formData, icon: iconName })}
+                        >
+                          <IconComponent className="w-5 h-5" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {formData.customIconBase64 ? (
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                          <img
+                            src={formData.customIconBase64}
+                            alt="自定义图标"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <Button type="button" variant="outline" size="sm" onClick={handleRemoveCustomIcon}>
+                          移除
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button type="button" variant="outline" onClick={handleSelectCustomIcon}>
+                        <Image className="w-4 h-4 mr-2" />
+                        选择图片
+                      </Button>
+                    )}
+                    <p className="text-xs text-zinc-500">
+                      支持 PNG, JPG, SVG, WEBP 格式
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Name */}
@@ -374,9 +471,9 @@ export function ProgramForm() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {categoryOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -431,8 +528,16 @@ export function ProgramForm() {
                 <Label>预览</Label>
                 <div className="mt-3 p-6 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-                      <SelectedIcon className="w-6 h-6" />
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white shadow-lg overflow-hidden">
+                      {formData.iconType === 'custom' && formData.customIconBase64 ? (
+                        <img
+                          src={formData.customIconBase64}
+                          alt="预览图标"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <SelectedIcon className="w-6 h-6" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">

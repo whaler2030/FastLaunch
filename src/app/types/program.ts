@@ -3,6 +3,7 @@ export interface Program {
   name: string;
   description: string;
   icon: string;
+  iconType?: 'lucide' | 'custom';
   path: string;
   category: string;
   tags: string[];
